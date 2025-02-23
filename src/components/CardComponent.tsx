@@ -1,7 +1,10 @@
 import { ICarCard } from "src/pages/root/HomePage";
 import CarCountdown from "./CarCountdown";
+import { Link } from "react-router-dom";
+import { useUserContext } from "./AuthContext";
 
 const CarCard = ({ car }: { car: ICarCard }) => {
+  const { user } = useUserContext();
   return (
     <div className="bg-gray-800 text-white p-4 rounded-lg shadow-lg hover:shadow-xl transition duration-300">
       {/* Car Image Slider */}
@@ -31,9 +34,11 @@ const CarCard = ({ car }: { car: ICarCard }) => {
         {/* Price & Rent Button */}
         <div className="flex justify-between items-center mt-3">
           <p className="text-xl font-bold">${car.pricePerDay}/day</p>
-          <button className="px-4 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600">
-            Rent Now
-          </button>
+          <Link to={`/single_car_item/${car._id}`}>
+            <button className="px-4 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+              {user.role === "business" ? "Rent Now" : "View Now"}
+            </button>
+          </Link>
         </div>
       </div>
     </div>

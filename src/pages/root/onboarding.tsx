@@ -1,15 +1,16 @@
-import { useUserContext } from "@components/AuthContext";
+import { endPoint, useUserContext } from "@components/AuthContext";
 import { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 const Onboarding = () => {
   const navigate = useNavigate();
   const { userId } = useParams();
-  const { user } = useUserContext();
+  const { user, setUser } = useUserContext();
 
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
+  const [contact, setContact] = useState<string>();
   const isAdmin = user.email === import.meta.env.VITE_ADMIN_EMAIL_ADDRESS;
 
   const [businessData, setBusinessData] = useState({
@@ -17,26 +18,34 @@ const Onboarding = () => {
     description: "",
     location: "",
     contact: "",
+    tin: "",
+    licenseUrl: "",
+    licenseFile: null,
   });
 
-  const endPoint = import.meta.env.VITE_BACKEND_ADDRESS;
-
   useEffect(() => {
-    if (!userId || isAdmin) {
+    if (isAdmin) {
       navigate("/");
     }
   }, [userId, navigate]);
 
-  useEffect(() => {
-    if (user.role) {
-      navigate("/");
-    }
-  }, [user]);
+  const handleLicense = (e: any) => {
+    const file = e.target.files[0];
+    setBusinessData((prevData) => ({
+      ...prevData,
+      licenseUrl: URL.createObjectURL(file),
+      licenseFile: file,
+    }));
+  };
 
   const handleOnboarding = async () => {
     if (!role) {
       setError("Please select a role.");
       return;
+    }
+
+    if (user.role) {
+      return alert("You already have a role");
     }
 
     setLoading(true);
@@ -49,12 +58,17 @@ const Onboarding = () => {
         body: JSON.stringify({
           userId,
           role,
+          contact,
         }),
       });
 
       const data = await response.json();
 
-      if (response.ok) {
+      if (data) {
+        setUser((prevData) => ({
+          ...prevData,
+          role: data.role,
+        }));
         navigate(`/dashboard/${userId}`);
       } else {
         setError(data.message);
@@ -84,25 +98,41 @@ const Onboarding = () => {
       return;
     }
 
+    if (user.role) {
+      return alert("You already have a role");
+    }
+
     setLoading(true);
     setError("");
+
+    const formData = new FormData();
+    formData.append("name", businessData.name);
+    formData.append("description", businessData.description);
+    formData.append("location", businessData.location);
+    formData.append("contact", businessData.contact);
+    formData.append("tin", businessData.tin);
+    formData.append("userId", user._id);
+    formData.append("role", role);
+
+    if (businessData.licenseFile) {
+      formData.append("licenseFile", businessData.licenseFile);
+    }
 
     try {
       const response = await fetch(`${endPoint}/root/business/create`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          businessData,
-          userId,
-          role,
-        }),
+        body: formData,
       });
 
       const data = await response.json();
       if (!data.business) return setError(data.message);
 
-      if (response.ok) {
-        window.location.replace(`/dashboard/${userId}`);
+      if (data.business) {
+        setUser((prevData) => ({
+          ...prevData,
+          role: "business",
+        }));
+        navigate(`/dashboard/${userId}`);
       } else {
         setError(data.message);
       }
@@ -120,10 +150,6 @@ const Onboarding = () => {
         <h1 className="text-2xl font-semibold text-center mb-4 text-white">
           Select Your Role
         </h1>
-
-        {error && (
-          <p className="text-red-500 text-sm mb-4 text-center">{error}</p>
-        )}
 
         <div className="flex flex-col gap-4">
           <button
@@ -148,6 +174,38 @@ const Onboarding = () => {
             🏢 I am a Company
           </button>
         </div>
+
+        {role === "carOwner" && (
+          <form onSubmit={handleSubmit}>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-300">
+                Contact
+              </label>
+              <input
+                type="text"
+                name="contact"
+                value={contact}
+                onChange={(e) => setContact(e.target.value)}
+                className="w-full p-2 mt-1 border rounded-md bg-gray-700 text-white"
+                placeholder="Enter your contact number"
+              />
+            </div>
+
+            {error && (
+              <p className="text-red-500 text-sm mb-4 text-center mt-4">
+                {error}
+              </p>
+            )}
+
+            <button
+              onClick={handleOnboarding}
+              disabled={loading}
+              className="w-full p-3 mt-6 bg-green-500 text-white rounded-md"
+            >
+              {loading ? "Processing..." : "Continue"}
+            </button>
+          </form>
+        )}
 
         {role === "business" && (
           <form onSubmit={handleSubmit}>
@@ -207,6 +265,48 @@ const Onboarding = () => {
             </div>
 
             <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-300">
+                Tin
+              </label>
+              <input
+                type="text"
+                name="tin"
+                value={businessData.tin}
+                onChange={handleChange}
+                className="w-full p-2 mt-1 border rounded-md bg-gray-700 text-white"
+                placeholder="Enter your tin number"
+              />
+            </div>
+
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-300">
+                License
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleLicense}
+                className="w-full p-2 mt-1 border rounded-md bg-gray-700 text-white object-contain"
+              />
+
+              {businessData.licenseUrl && (
+                <div className="mt-2">
+                  <img
+                    src={businessData.licenseUrl}
+                    alt="License"
+                    className="w-full object-cover h-48 rounded-lg"
+                  />
+                </div>
+              )}
+            </div>
+
+            {error && (
+              <p className="text-red-500 text-sm mb-4 text-center mt-4">
+                {error}
+              </p>
+            )}
+
+            <div className="mt-4">
               <button
                 type="submit"
                 disabled={loading}
@@ -216,16 +316,6 @@ const Onboarding = () => {
               </button>
             </div>
           </form>
-        )}
-
-        {role === "carOwner" && (
-          <button
-            onClick={handleOnboarding}
-            disabled={loading}
-            className="w-full p-3 mt-6 bg-green-500 text-white rounded-md"
-          >
-            {loading ? "Processing..." : "Continue"}
-          </button>
         )}
       </div>
     </div>

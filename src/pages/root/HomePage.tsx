@@ -1,11 +1,8 @@
+import { endPoint } from "@components/AuthContext";
 import CarCard from "@components/CardComponent";
 import { carBrands, testimonials } from "@components/data/dammyData";
-import Footer from "@components/Footer";
-import Navbar from "@components/Navbar";
 import { useEffect, useState } from "react";
-// import CarCard from "@components/CarCard";
-// import CategorySection from "@components/CategorySection";
-// import SearchBar from "@components/SearchBar";
+import { ICar } from "./Dashboard/CarOwnerDashboard";
 
 export interface ICarCard {
   availableUntil: string;
@@ -28,8 +25,6 @@ const HomePage = () => {
   const [featuredCars, setFeaturedCars] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const endPoint = import.meta.env.VITE_BACKEND_ADDRESS;
-
   useEffect(() => {
     const fetchFeaturedCars = async () => {
       try {
@@ -40,7 +35,16 @@ const HomePage = () => {
           },
         });
         const data = await response.json();
-        setFeaturedCars(data.cars);
+        // Get current date
+        const currentDate = new Date();
+
+        // Filter cars by approval status and availableUntil date
+        const filteredData = data.cars.filter((car: ICar) => {
+          const availableUntilDate = new Date(car.availableUntil);
+          return car.isApproved === true && availableUntilDate >= currentDate;
+        });
+
+        setFeaturedCars(filteredData);
       } catch (error) {
         console.error("Error fetching featured cars:", error);
       } finally {
@@ -53,7 +57,7 @@ const HomePage = () => {
 
   return (
     <>
-      <Navbar />
+      {/* <Navbar /> */}
       <div className="min-h-screen bg-gray-900 text-white">
         {/* Hero Section */}
         <section
@@ -99,6 +103,8 @@ const HomePage = () => {
           <h2 className="text-3xl font-semibold text-center">Featured Cars</h2>
           {loading ? (
             <p className="text-center">Loading featured cars...</p>
+          ) : featuredCars.length === 0 ? (
+            <p className="text-xl text-center mt-10">No posts for now</p>
           ) : (
             <div className="grid mt-10 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 px-10">
               {featuredCars.map((car: ICarCard) => (
@@ -180,7 +186,7 @@ const HomePage = () => {
           </div>
         </section>
       </div>
-      <Footer />
+      {/* <Footer /> */}
     </>
   );
 };

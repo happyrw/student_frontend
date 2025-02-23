@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { INITIAL_USER, useUserContext } from "./AuthContext";
 import { User2, X } from "lucide-react";
 import { useState } from "react";
@@ -7,11 +7,16 @@ const Navbar = () => {
   const { isAuthenticated, user, setUser, setIsAuthenticated } =
     useUserContext();
   const [drop, setDrop] = useState(false);
+  const navigate = useNavigate();
 
   const handleLogOut = () => {
-    setUser(INITIAL_USER);
-    localStorage.removeItem("rental_token");
-    setIsAuthenticated(false);
+    const userConfirmed = window.confirm("Are you sure you want to log out?");
+    if (userConfirmed) {
+      setUser(INITIAL_USER);
+      localStorage.removeItem("rental_token");
+      setIsAuthenticated(false);
+      navigate("/");
+    }
   };
 
   return (
@@ -44,15 +49,12 @@ const Navbar = () => {
 
       {/* Navigation Links */}
       <div className="hidden md:flex items-center gap-6">
-        {/* <Link to="/cars" className="hover:text-gray-300 transition">
-          Browse Cars
-        </Link>
         <Link to="/about" className="hover:text-gray-300 transition">
           About
         </Link>
         <Link to="/contact" className="hover:text-gray-300 transition">
           Contact
-        </Link> */}
+        </Link>
 
         {/* Conditional Buttons Based on Authentication */}
         {isAuthenticated ? (
@@ -67,19 +69,21 @@ const Navbar = () => {
             {/* Profile Dropdown */}
             <div className="relative group">
               <div className="flex items-center gap-2">
-                <button className="flex items-center gap-2 px-4 py-2 mr-5 rounded-lg hover:bg-gray-600 transition">
-                  <img
-                    src={user?.imageUrl || "/default-avatar.png"}
-                    alt="User Avatar"
-                    className="w-8 h-8 rounded-full object-cover shrink-0"
-                  />
-                  <span className="text-nowrap">
-                    {user?.fullname || "Profile"}
-                  </span>
-                </button>
+                <div className="bg-gray-600 flex items-center px-4 py-[4px] rounded-lg mr-4">
+                  <button className="flex items-center gap-[3px] mr-5 pr-2 rounded-lg transition">
+                    <img
+                      src={user?.imageUrl || "/default-avatar.png"}
+                      alt="User Avatar"
+                      className="w-8 h-8 rounded-full object-cover shrink-0"
+                    />
+                    <span className="text-nowrap ">
+                      {user?.fullname || "Profile"}
+                    </span>
+                  </button>
+                </div>
                 <button
                   onClick={handleLogOut}
-                  className="block px-4 py-2 text-left w-full hover:bg-gray-700 bg-gray-700"
+                  className="block px-4 py-2 text-left w-full hover:bg-gray-700 bg-gray-700 rounded-lg"
                 >
                   Logout
                 </button>

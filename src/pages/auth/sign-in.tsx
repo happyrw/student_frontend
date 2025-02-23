@@ -1,11 +1,9 @@
-import { useUserContext } from "@components/AuthContext";
+import { endPoint, useUserContext } from "@components/AuthContext";
 import { Loader } from "lucide-react";
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 const SignIn = () => {
-  const endPoint = import.meta.env.VITE_BACKEND_ADDRESS;
-
   const [userData, setUserdata] = useState({
     email: "",
     password: "",

@@ -1,21 +1,20 @@
-import { useUserContext } from "@components/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
+import { endPoint, useUserContext } from "@components/AuthContext";
+import { Link } from "react-router-dom";
 import CarOwnerDashboard, { ICar } from "./CarOwnerDashboard";
 import BusinessDashboard from "./BusinessDashboard";
 import AdminDashboard from "./AdminDashboard";
-import { Button } from "@components/ui/button";
+import { Button } from "@components/components/ui/button";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import LoadingComponent from "@components/loadingComponent";
 
 const MainDashboard = () => {
   const { user } = useUserContext();
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [cars, setCars] = useState<ICar[]>([]);
+  const [businesses, setBusinesses] = useState([]);
   const [businessName, setBusinessName] = useState();
   const isAdmin = user.email === import.meta.env.VITE_ADMIN_EMAIL_ADDRESS;
-  const endPoint = import.meta.env.VITE_BACKEND_ADDRESS;
 
   const token = localStorage.getItem("rental_token");
   const userWithData = async () => {
@@ -28,7 +27,6 @@ const MainDashboard = () => {
         },
       });
       const data = await response.json();
-      console.log("Fetched data", data);
       setCars(data.user.car);
     } catch (error) {
       console.log(error);
@@ -46,8 +44,28 @@ const MainDashboard = () => {
         },
       });
       const data = await response.json();
-      console.log("AdminWithData data", data);
-      setCars(data.cars);
+
+      const currentDate = new Date();
+
+      const filteredData = data.cars.filter((item: ICar) => {
+        const availableUntilDate = new Date(item.availableUntil);
+        return availableUntilDate >= currentDate;
+      });
+      setCars(filteredData);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const adminWithDataBusiness = async () => {
+    try {
+      const response = await fetch(`${endPoint}/root/business/get`, {
+        method: "GET",
+      });
+      const data = await response.json();
+      setBusinesses(data.businesses);
     } catch (error) {
       console.log(error);
     } finally {
@@ -67,8 +85,7 @@ const MainDashboard = () => {
         }
       );
       const data = await response.json();
-      console.log("businessWithData data", data.business.name);
-      setCars(data.business.rentals);
+      setCars(data.business);
       setBusinessName(data.business.name);
     } catch (error) {
       console.log(error);
@@ -82,14 +99,15 @@ const MainDashboard = () => {
       userWithData();
     } else if (isAdmin) {
       adminWithData();
+      adminWithDataBusiness();
     } else if (user.role === "business") {
       businessWithData();
     }
   }, [user.role]);
 
-  console.log(cars);
-
-  if (!user.email) navigate("/");
+  // useEffect(() => {
+  //   if (user && !user.email) navigate("/");
+  // }, [user.email]);
   if (loading) return <LoadingComponent />;
 
   return (
@@ -151,9 +169,18 @@ const MainDashboard = () => {
 
         {/* Role-based Dashboard */}
         <div className="mt-6">
-          {user.role == "carOwner" && <CarOwnerDashboard cars={cars} />}
+          {user.role == "carOwner" && (
+            <CarOwnerDashboard cars={cars} setCars={setCars} />
+          )}
           {user.role === "business" && <BusinessDashboard cars={cars} />}
-          {isAdmin && <AdminDashboard cars={cars} />}
+          {isAdmin && (
+            <AdminDashboard
+              cars={cars}
+              setCars={setCars}
+              businesses={businesses}
+              setBusinesses={setBusinesses}
+            />
+          )}
         </div>
       </div>
     </div>

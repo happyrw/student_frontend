@@ -1,6 +1,7 @@
 import { useState } from "react";
 import ImageUpload from "./ImageUpload";
 import { useNavigate, useParams } from "react-router-dom";
+import { endPoint } from "@components/AuthContext";
 const CreateUpload = () => {
   const { userId, role } = useParams();
   const navigate = useNavigate();
@@ -16,12 +17,15 @@ const CreateUpload = () => {
     role: role,
     isApproved: false,
     isRentedByBusiness: false,
+    location: "",
+    insuranceUrl: "",
+    insuranceFile: null,
+    yellowCardUrl: "",
+    yellowCardFile: null,
   });
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const endPoint = import.meta.env.VITE_BACKEND_ADDRESS;
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -37,6 +41,23 @@ const CreateUpload = () => {
     }
   };
 
+  const handleInsuranceFile = (e: any) => {
+    const file = e.target.files[0];
+    setFormData((prev) => ({
+      ...prev,
+      insuranceFile: file,
+      insuranceUrl: URL.createObjectURL(file),
+    }));
+  };
+  const handleYellowCaFile = (e: any) => {
+    const file = e.target.files[0];
+    setFormData((prev) => ({
+      ...prev,
+      yellowCardFile: file,
+      yellowCardUrl: URL.createObjectURL(file),
+    }));
+  };
+
   const handleImagesChange = (files: File[]) => {
     setFormData((prev) => ({ ...prev, images: files }));
   };
@@ -50,10 +71,24 @@ const CreateUpload = () => {
     Object.entries(formData).forEach(([key, value]) => {
       if (key === "images") {
         (value as File[]).forEach((file) => form.append("images", file));
+      } else if (key === "location") {
+        // Ensure location is sent as a string
+        form.append(
+          "location",
+          Array.isArray(value) ? value.join(", ") : String(value)
+        );
       } else {
         form.append(key, String(value));
       }
     });
+
+    if (formData.insuranceFile) {
+      form.append("insuranceFile", formData.insuranceFile);
+    }
+
+    if (formData.yellowCardFile) {
+      form.append("yellowCardFile", formData.yellowCardFile);
+    }
 
     try {
       const response = await fetch(`${endPoint}/root/cars/create`, {
@@ -140,6 +175,7 @@ const CreateUpload = () => {
                     <option value="petrol">Petrol</option>
                     <option value="diesel">Diesel</option>
                     <option value="electric">Electric</option>
+                    <option value="hybrid">Hybrid</option>
                   </>
                 )}
               </select>
@@ -161,6 +197,55 @@ const CreateUpload = () => {
             </div>
           </div>
         ))}
+        <div>
+          <input
+            type="location"
+            placeholder="Location"
+            name="location"
+            value={formData.location}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+            required
+          />
+        </div>
+        {/* Insurance */}
+        <div>
+          <label className="block mb-2 text-sm font-medium text-gray-700">
+            Upload Insurance
+          </label>{" "}
+          <input
+            type="file"
+            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+            required
+            onChange={handleInsuranceFile}
+          />
+          {formData.insuranceUrl && (
+            <img
+              src={formData.insuranceUrl}
+              alt="User Image"
+              className="w-1/2 h-32 rounded-lg object-cover mt-2 mx-2"
+            />
+          )}
+        </div>
+        {/* Yellow card */}
+        <div>
+          <label className="block mb-2 text-sm font-medium text-gray-700">
+            Upload Yellow card
+          </label>{" "}
+          <input
+            type="file"
+            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+            required
+            onChange={handleYellowCaFile}
+          />
+          {formData.yellowCardUrl && (
+            <img
+              src={formData.yellowCardUrl}
+              alt="User Image"
+              className="w-1/2 h-32 rounded-lg object-cover mt-2 mx-2"
+            />
+          )}
+        </div>
         {error && (
           <div className="w-full text-white text-xl py-10 text-center bg-red-700">
             {error}

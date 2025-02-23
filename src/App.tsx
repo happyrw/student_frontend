@@ -7,26 +7,13 @@ import LoadingComponent from "@components/loadingComponent";
 import MainDashboard from "./pages/root/Dashboard/MainDashboard";
 import CreateUpload from "./pages/root/CreateUpload";
 import HomePage from "./pages/root/HomePage";
+import DetailPage from "./pages/DetailPage";
 
 export default function Home() {
-  const { isLoading } = useUserContext();
-  if (isLoading) {
+  const { isLoading, loading } = useUserContext();
+  if (isLoading || loading) {
     return <LoadingComponent />;
   }
-
-  // const logOut = () => {
-  //   localStorage.removeItem("rental_token");
-  //   setUser({
-  //     _id: "",
-  //     fullname: "",
-  //     email: "",
-  //     password: "",
-  //     imageUrl: "",
-  //     role: "",
-  //     businessId: "",
-  //   });
-  //   setIsAuthenticated(false);
-  // };
 
   return (
     <Routes>
@@ -40,6 +27,7 @@ export default function Home() {
         path="/create_upload_rent_your_car/:userId/:role"
         element={<CreateUpload />}
       />
+      <Route path="/single_car_item/:id" element={<DetailPage />} />
     </Routes>
   );
 }

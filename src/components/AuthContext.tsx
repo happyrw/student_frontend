@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-const endPoint = import.meta.env.VITE_BACKEND_ADDRESS;
+export const endPoint = import.meta.env.VITE_BACKEND_ADDRESS;
 
 export const INITIAL_USER = {
   _id: "",
@@ -18,6 +18,12 @@ const INITIAL_STATE = {
   setUser: () => {},
   setIsLoading: () => {},
   setIsAuthenticated: () => {},
+  businessId: "",
+  setBusinessId: () => {},
+  loading: false,
+  setLoading: () => {},
+  isApproved: false,
+  setIsApproved: () => {},
 };
 interface IUser {
   _id: string;
@@ -36,6 +42,12 @@ interface IContextState {
   setUser: React.Dispatch<React.SetStateAction<IUser>>;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
   setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
+  businessId: string;
+  setBusinessId: React.Dispatch<React.SetStateAction<string>>;
+  loading: boolean;
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  isApproved: boolean | undefined;
+  setIsApproved: React.Dispatch<React.SetStateAction<boolean | undefined>>;
 }
 
 const AuthContext = createContext<IContextState>(INITIAL_STATE);
@@ -48,6 +60,9 @@ export const AuthContextProvider = ({
   const [user, setUser] = useState<IUser>(INITIAL_USER);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [businessId, setBusinessId] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [isApproved, setIsApproved] = useState<boolean>();
 
   const token = localStorage.getItem("rental_token");
 
@@ -86,13 +101,42 @@ export const AuthContextProvider = ({
     }
   };
 
+  const businessWithData = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `${endPoint}/root/business/get/${user._id}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const data = await response.json();
+      setBusinessId(data.business._id);
+      setIsApproved(data.business.isApproved);
+      console.log(data.business);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (token) {
       getSessionUser();
     }
   }, []);
 
-  console.log("isAuthenticated", isAuthenticated);
+  useEffect(() => {
+    if (user.role === "business") {
+      businessWithData();
+    }
+  }, [user.role]);
+
+  console.log("isApproved", isApproved);
 
   const value = {
     user,
@@ -101,6 +145,12 @@ export const AuthContextProvider = ({
     setIsLoading,
     isAuthenticated,
     setIsAuthenticated,
+    businessId,
+    setBusinessId,
+    loading,
+    setLoading,
+    isApproved,
+    setIsApproved,
   };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
