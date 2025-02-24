@@ -176,7 +176,7 @@ const CarOwnerDashboard = ({
             showType === "order" && "border-2 border-white"
           }`}
         >
-          Business Orders
+          Company Orders
         </Button>
       </div>
 
@@ -283,7 +283,7 @@ const CarOwnerDashboard = ({
 
       {showType === "order" && (
         <div>
-          <h3 className="text-xl font-semibold mb-4">Business Orders</h3>
+          <h3 className="text-xl font-semibold mb-4">Company Orders</h3>
           {orders?.length === 0 ? (
             <p className="text-gray-400">No orders yet.</p>
           ) : (
@@ -498,9 +498,7 @@ const CarOwnerDashboard = ({
                 {carForDetail.isApproved ? "Yes" : "No"}
               </p>
               <p className="text-lg font-semibold text-gray-800">
-                <strong className="text-gray-900">
-                  Is Rented By Business:
-                </strong>{" "}
+                <strong className="text-gray-900">Is Rented By Company:</strong>{" "}
                 {carForDetail.isRentedByBusiness ? "Yes" : "No"}
               </p>
             </div>

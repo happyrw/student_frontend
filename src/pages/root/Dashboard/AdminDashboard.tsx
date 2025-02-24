@@ -93,7 +93,6 @@ const AdminDashboard = ({
   };
 
   const filterBusiness = () => {
-    console.log("Running filterBusiness with businesses:", businesses);
     let filtered;
     switch (type) {
       case "Pending":
@@ -105,7 +104,6 @@ const AdminDashboard = ({
       default:
         filtered = businesses;
     }
-    console.log("Filtered Businesses:", filtered);
     setFilteredBusinesses(filtered);
   };
 
@@ -117,7 +115,6 @@ const AdminDashboard = ({
       filterBusiness();
     }
   }, [type, cars, businesses, approveType]);
-  console.log("approveType", approveType);
 
   const showPopup = (cardId: string) => {
     const detailCar = cars.find((c: ICar) => c._id === cardId);
@@ -125,8 +122,6 @@ const AdminDashboard = ({
       setFilteredCar(detailCar);
     }
   };
-
-  console.log(filteredCar);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white/50 p-6">
@@ -205,9 +200,7 @@ const AdminDashboard = ({
                 {filteredCar.isApproved ? "Yes" : "No"}
               </p>
               <p className="text-lg font-semibold text-gray-800">
-                <strong className="text-gray-900">
-                  Is Rented By Business:
-                </strong>{" "}
+                <strong className="text-gray-900">Is Rented By Company:</strong>{" "}
                 {filteredCar.isRentedByBusiness ? "Yes" : "No"}
               </p>
               <p className="text-lg font-semibold text-gray-800">
@@ -261,7 +254,7 @@ const AdminDashboard = ({
             approveType !== "car" && "border-2 border-white"
           }`}
         >
-          Business
+          Company
         </Button>
       </div>
       {approveType === "car" && (
@@ -286,13 +279,13 @@ const AdminDashboard = ({
             onClick={() => setType("Pending")}
             className="w-full bg-red-700"
           >
-            Pending business
+            Pending company
           </Button>
           <Button
             onClick={() => setType("Approved")}
             className="w-full bg-green-700"
           >
-            Approved business
+            Approved company
           </Button>
         </div>
       )}
@@ -378,7 +371,7 @@ const AdminDashboard = ({
           <div>
             {filteredBusinesses.length === 0 ? (
               <p className="text-gray-400">
-                No businesses available for approval.
+                No company available for approval.
               </p>
             ) : (
               <div className="overflow-x-auto">
