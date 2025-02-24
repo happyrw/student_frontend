@@ -70,8 +70,9 @@ const RentCarModal = ({
       });
 
       const data = await response.json();
-      if (data) {
+      if (data.order) {
         setIsModalOpen(false);
+        window.location.replace("/");
       }
     } catch (error) {
       console.log("Error: ", error);
@@ -90,7 +91,7 @@ const RentCarModal = ({
           <div>
             <label className="block text-gray-700">Start Date</label>
             <input
-              type="date"
+              type="datetime-local"
               name="startDate"
               value={orderData.startDate}
               required
@@ -103,7 +104,7 @@ const RentCarModal = ({
           <div>
             <label className="block text-gray-700">End Date</label>
             <input
-              type="date"
+              type="datetime-local"
               name="endDate"
               value={orderData.endDate}
               required

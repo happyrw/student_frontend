@@ -63,6 +63,8 @@ const CreateUpload = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    console.log("Final API URL:", `${endPoint}/root/cars/create`);
+
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -149,7 +151,7 @@ const CreateUpload = () => {
             {/* For icon positioning */}
             {field === "availableUntil" ? (
               <input
-                type="date"
+                type="datetime-local"
                 name={field}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 transition-all duration-300"
                 onChange={handleChange}

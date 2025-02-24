@@ -41,7 +41,11 @@ const HomePage = () => {
         // Filter cars by approval status and availableUntil date
         const filteredData = data.cars.filter((car: ICar) => {
           const availableUntilDate = new Date(car.availableUntil);
-          return car.isApproved === true && availableUntilDate >= currentDate;
+          return (
+            car.isApproved === true &&
+            availableUntilDate >= currentDate &&
+            car.isRentedByBusiness === false
+          );
         });
 
         setFeaturedCars(filteredData);

@@ -12,6 +12,23 @@ const DetailPage = () => {
   const { id } = useParams();
 
   const { user, isApproved } = useUserContext();
+  const [orders, setOrders] = useState<any>();
+
+  // Fetch car orders from the backend
+  const getCarOrders = async () => {
+    const response = await fetch(`${endPoint}/root/orders/get`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await response.json();
+    setOrders(data);
+  };
+
+  useEffect(() => {
+    getCarOrders();
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -33,8 +50,6 @@ const DetailPage = () => {
           return car.isApproved === true && availableUntilDate >= currentDate;
         });
 
-        console.log("Filtered data", filteredData);
-
         const carDetail = filteredData.find(
           (singleCar: ICar) => singleCar._id === id
         );
@@ -51,6 +66,11 @@ const DetailPage = () => {
 
   if (loading || !car) return <LoadingComponent />;
 
+  let doesCarExist = false;
+  if (orders) {
+    doesCarExist = orders.some((order: any) => order.carId === id);
+    console.log(doesCarExist);
+  }
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
       <div className="max-w-5xl mx-auto bg-gray-800 p-6 rounded-lg shadow-lg">
@@ -72,7 +92,7 @@ const DetailPage = () => {
         </h1>
         <p className="text-gray-300 mt-2">{car.description}</p>
 
-        <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="mt-6 grid grid-cols-2 md:grid-cols-2 gap-4">
           <p>
             <span className="font-semibold">Fuel Type:</span> {car.fuelType}
           </p>
@@ -81,8 +101,8 @@ const DetailPage = () => {
             {car.transmission}
           </p>
           <p>
-            <span className="font-semibold">Price Per Day:</span> $
-            {car.pricePerDay}
+            <span className="font-semibold">Price Per Day:</span>{" "}
+            <p className="text-nowrap">RW {car.pricePerDay}</p>
           </p>
           <p>
             <span className="font-semibold">Available Until:</span>{" "}
@@ -98,12 +118,21 @@ const DetailPage = () => {
         {user.role === "business" &&
           (isApproved ? (
             <div className="mt-6">
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
-              >
-                Rent This Car
-              </button>
+              {doesCarExist ? (
+                <button
+                  disabled
+                  className="px-6 py-2 bg-blue-300 hover:bg-blue-600 text-black rounded-lg"
+                >
+                  Order Pending...
+                </button>
+              ) : (
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
+                >
+                  Rent This Car
+                </button>
+              )}
             </div>
           ) : (
             <div className="bg-red-700/15 py-2 px-4 rounded-lg mt-3">

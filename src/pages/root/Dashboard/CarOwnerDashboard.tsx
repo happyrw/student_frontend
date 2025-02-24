@@ -1,7 +1,7 @@
 import { endPoint } from "@components/AuthContext";
 import CarCountdown from "@components/CarCountdown";
 import { Button } from "@components/components/ui/button";
-import { Check, Eye, Plus } from "lucide-react";
+import { Check, Eye, Plus, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export interface ICar {
@@ -15,9 +15,12 @@ export interface ICar {
   isApproved: boolean;
   isRentedByBusiness: boolean;
   model: string;
+  location: string;
   ownerId: string;
   pricePerDay: string;
   transmission: string;
+  insuranceFileUrl: string;
+  yellowCardFileUrl: string;
   updatedAt: string;
   year: string;
   _id: string;
@@ -36,7 +39,9 @@ const CarOwnerDashboard = ({
   const [availableUntil, setAvailableUntil] = useState<string>();
   const [showType, setShowType] = useState("car");
   const [orders, setOrders] = useState<any>();
-  const [loading, setLoading] = useState(false);
+  const [loadingConfirm, setLoadingConfirm] = useState(false);
+  const [loadingCancel, setLoadingCancel] = useState(false);
+  const [currentTime, setCurrentTime] = useState();
 
   const handleCarClick = (carId: string) => {
     const car = cars.find((c: ICar) => c._id === carId);
@@ -44,6 +49,10 @@ const CarOwnerDashboard = ({
   };
 
   const handleAddTime = async () => {
+    const cfm = window.confirm(
+      "Once you update your car time availability, your car will be automatically unpublished until new approval from administration."
+    );
+    if (!cfm) return;
     try {
       setSaving(true);
       const formattedAvailableUntil = new Date(
@@ -65,12 +74,11 @@ const CarOwnerDashboard = ({
       if (data) {
         const updatedCar = cars.map((car) =>
           car._id === carForDetail?._id
-            ? { ...car, availableUntil: availableUntil }
+            ? { ...car, availableUntil: availableUntil, isApproved: false }
             : car
         );
         setCars(updatedCar);
       }
-      alert("Time added successfully");
       setCarForDetail(undefined);
     } catch (error) {
       alert("Try again");
@@ -80,11 +88,21 @@ const CarOwnerDashboard = ({
     }
   };
 
-  const handleAction = async (orderId: string, action: string) => {
-    setLoading(true);
+  const handleAction = async (
+    orderId: string,
+    action: string,
+    carId: string
+  ) => {
+    const proceed = window.confirm(carId);
+    if (!proceed) return;
+    if (action === "confirmed") {
+      setLoadingConfirm(true);
+    } else {
+      setLoadingCancel(true);
+    }
     try {
       const response = await fetch(
-        `${endPoint}/root/orders/update/${orderId}/${action}`,
+        `${endPoint}/root/orders/update/${orderId}/${action}/${carId}`,
         {
           method: "PUT",
           headers: {
@@ -101,11 +119,13 @@ const CarOwnerDashboard = ({
       }
       console.log(`Action: ${action} for carId: ${orderId}`);
 
-      setLoading(false);
+      setLoadingConfirm(false);
+      setLoadingCancel(false);
     } catch (error) {
       console.log(error);
     } finally {
-      setLoading(false);
+      setLoadingConfirm(false);
+      setLoadingCancel(false);
     }
   };
 
@@ -124,7 +144,18 @@ const CarOwnerDashboard = ({
   useEffect(() => {
     getCarOrders();
   }, []);
-  console.log("orders", orders);
+
+  // FUNCTION TO DISPLAY EXISTING CAR AVAILABILITY TIME IN 03/12/2020 FORMAT
+  function CarAvailability(availableUntil: string) {
+    const date = new Date(availableUntil);
+
+    // Format the date as yyyy-mm-dd
+    const formattedDate = `${date.getFullYear()}-${(date.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
+
+    setCurrentTime(formattedDate as any);
+  }
 
   return (
     <div className="mt-6 bg-gray-800 rounded-lg shadow-lg text-white">
@@ -159,7 +190,7 @@ const CarOwnerDashboard = ({
                 <table className="min-w-full bg-gray-900 border border-gray-700 rounded-lg shadow-md">
                   <thead>
                     <tr className="text-left bg-gray-700 text-white">
-                      <th className="text-nowrap py-2 px-7 border border-gray-600">
+                      <th className="text-nowrap py-2 px-14 border border-gray-600">
                         Image
                       </th>
                       <th className="text-nowrap py-2 px-7 border border-gray-600">
@@ -217,11 +248,11 @@ const CarOwnerDashboard = ({
                           {car.fuelType}
                         </td>
                         <td className="py-2 px-4 border border-gray-600">
-                          <div className="flex items-center gap-2">
-                            ${car.pricePerDay}{" "}
+                          <div className="flex items-center gap-2 flex-nowrap">
+                            <p className="text-nowrap">RW {car.pricePerDay}</p>
                             <button
                               onClick={() => handleCarClick(car._id)}
-                              className="text-black bg-white w-full flex items-center justify-center rounded-md"
+                              className="text-black bg-white w-full flex items-center justify-center rounded-md px-4"
                             >
                               <Eye />
                             </button>
@@ -253,91 +284,109 @@ const CarOwnerDashboard = ({
       {showType === "order" && (
         <div>
           <h3 className="text-xl font-semibold mb-4">Business Orders</h3>
-          {orders.length === 0 ? (
+          {orders?.length === 0 ? (
             <p className="text-gray-400">No orders yet.</p>
           ) : (
             <div className="overflow-x-auto custom-scrollbar">
-              <table className="min-w-full bg-gray-900 border border-gray-700 rounded-lg shadow-md">
-                <thead>
-                  <tr className="text-left bg-gray-700 text-white">
-                    <th className="text-nowrap py-2 px-7 border border-gray-600">
-                      Company
-                    </th>
-                    <th className="text-nowrap py-2 px-7 border border-gray-600">
-                      Location
-                    </th>
-                    <th className="text-nowrap py-2 px-7 border border-gray-600">
-                      Start Date
-                    </th>
-                    <th className="text-nowrap py-2 px-7 border border-gray-600">
-                      End Date
-                    </th>
-                    <th className="text-nowrap py-2 px-7 border border-gray-600">
-                      Status
-                    </th>
-                    <th className="text-nowrap py-2 px-7 border border-gray-600">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {orders.map((order: any) => (
-                    <tr
-                      key={order._id}
-                      className="border-t border-gray-600 hover:bg-gray-800 transition"
-                    >
-                      <td className="py-2 px-4 border border-gray-600">
-                        {order.businessId.name}
-                      </td>
-                      <td className="py-2 px-4 border border-gray-600">
-                        {order.businessId.location}
-                      </td>
-                      <td className="py-2 px-4 border border-gray-600">
-                        {new Date(order.startDate).toLocaleDateString()}
-                      </td>
-                      <td className="py-2 px-4 border border-gray-600">
-                        {new Date(order.endDate).toLocaleDateString()}
-                      </td>
-                      <td className="py-2 px-4 border border-gray-600">
-                        {order.status}
-                      </td>
-                      <td className="py-2 px-4 border border-gray-600">
-                        <div className="flex items-center gap-2">
-                          {order.status === "Confirmed" ||
-                          order.status === "Cancelled" ? (
-                            <button className="flex items-center bg-blue-700 w-full justify-center gap-4 rounded-md py-2">
-                              Done <Check />
-                            </button>
-                          ) : (
-                            <>
-                              <button
-                                disabled={loading}
-                                onClick={() =>
-                                  handleAction(order._id, "Confirmed")
-                                }
-                                className="bg-gray-700 text-white py-1 px-3 rounded-md"
-                                value="confirm"
-                              >
-                                {loading ? "Confirm..." : "Confirm"}
-                              </button>
-                              <button
-                                disabled={loading}
-                                onClick={() =>
-                                  handleAction(order._id, "Cancelled")
-                                }
-                                className="bg-red-700 text-white py-1 px-3 rounded-md"
-                                value="cancel"
-                              >
-                                {loading ? "Cancel..." : "Cancel"}
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </td>
+              {orders ? (
+                <table className="min-w-full bg-gray-900 border border-gray-700 rounded-lg shadow-md">
+                  <thead>
+                    <tr className="text-left bg-gray-700 text-white">
+                      <th className="text-nowrap py-2 px-7 border border-gray-600">
+                        Company
+                      </th>
+                      <th className="text-nowrap py-2 px-7 border border-gray-600">
+                        Location
+                      </th>
+                      <th className="text-nowrap py-2 px-7 border border-gray-600">
+                        Contact
+                      </th>
+                      <th className="text-nowrap py-2 px-7 border border-gray-600">
+                        Start Date
+                      </th>
+                      <th className="text-nowrap py-2 px-7 border border-gray-600">
+                        End Date
+                      </th>
+                      <th className="text-nowrap py-2 px-7 border border-gray-600">
+                        Status
+                      </th>
+                      <th className="text-nowrap py-2 px-7 border border-gray-600">
+                        Action
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {orders?.map((order: any) => (
+                      <tr
+                        key={order._id}
+                        className="border-t border-gray-600 hover:bg-gray-800 transition"
+                      >
+                        <td className="py-2 px-4 border border-gray-600">
+                          {order.businessId.name}
+                        </td>
+                        <td className="py-2 px-4 border border-gray-600">
+                          {order.businessId.location}
+                        </td>
+                        <td className="py-2 px-4 border border-gray-600">
+                          {order.businessId.contact}
+                        </td>
+                        <td className="py-2 px-4 border border-gray-600">
+                          {new Date(order.startDate).toLocaleDateString()}
+                        </td>
+                        <td className="py-2 px-4 border border-gray-600">
+                          {new Date(order.endDate).toLocaleDateString()}
+                        </td>
+                        <td className="py-2 px-4 border border-gray-600">
+                          {order.status}
+                        </td>
+                        <td className="py-2 px-4 border border-gray-600">
+                          <div className="flex items-center gap-2">
+                            {order.status === "confirmed" ||
+                            order.status === "cancelled" ? (
+                              <button className="flex items-center bg-blue-700 w-full justify-center gap-4 rounded-md py-2">
+                                Done <Check />
+                              </button>
+                            ) : (
+                              <>
+                                <button
+                                  disabled={loadingConfirm || loadingCancel}
+                                  onClick={() =>
+                                    handleAction(
+                                      order._id,
+                                      "confirmed",
+                                      order.carId
+                                    )
+                                  }
+                                  className="bg-gray-700 text-white py-1 px-3 rounded-md"
+                                  value="confirm"
+                                >
+                                  {loadingConfirm ? "Confirm..." : "Confirm"}
+                                </button>
+                                <button
+                                  disabled={loadingConfirm || loadingCancel}
+                                  onClick={() =>
+                                    handleAction(
+                                      order._id,
+                                      "cancelled",
+                                      order.carId
+                                    )
+                                  }
+                                  className="bg-red-700 text-white py-1 px-3 rounded-md"
+                                  value="cancel"
+                                >
+                                  {loadingCancel ? "Cancel..." : "Cancel"}
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p className="text-xl text-center mt-2">No orders available</p>
+              )}
             </div>
           )}
         </div>
@@ -390,8 +439,7 @@ const CarOwnerDashboard = ({
                 {carForDetail.year}
               </p>
               <p className="text-lg font-semibold text-gray-800">
-                <strong className="text-gray-900">Price per Day:</strong> $
-                {carForDetail.pricePerDay}
+                <strong className="text-gray-900">Price per Day:</strong>
               </p>
               <p className="text-lg font-semibold text-gray-800">
                 <strong className="text-gray-900">Fuel Type:</strong>{" "}
@@ -409,27 +457,40 @@ const CarOwnerDashboard = ({
               {addTime ? (
                 <div className="flex items-center justify-between gap-2">
                   <input
-                    type="date"
+                    type="datetime-local"
                     className="w-full text-black border border-gray-300 rounded-md p-2 focus:outline-none"
-                    placeholder="Enter available until"
-                    value={availableUntil}
+                    value={availableUntil ? availableUntil : currentTime}
                     onChange={(e) => setAvailableUntil(e.target.value)}
                   />
-                  <Button disabled={saving} onClick={handleAddTime}>
-                    {saving ? "Saving..." : "Save"}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button disabled={saving} onClick={handleAddTime}>
+                      {saving ? "Saving..." : "Save"}
+                    </Button>
+                    <Button onClick={() => setAddTime(false)}>
+                      <X />
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div className="flex items-center justify-between">
-                  <p className="text-lg font-semibold text-black">
+                  <div className="text-lg font-semibold text-black">
                     <strong className="text-gray-900">Available Until:</strong>
-                    <CarCountdown
-                      availableUntil={carForDetail.availableUntil}
-                    />
-                  </p>
-                  <Button onClick={() => setAddTime(true)}>
-                    <Plus />
-                  </Button>
+                    <div className="bg-blue-700 px-2">
+                      <CarCountdown
+                        availableUntil={carForDetail.availableUntil}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => {
+                        setAddTime(true);
+                        CarAvailability(carForDetail.availableUntil);
+                      }}
+                    >
+                      <Plus />
+                    </Button>
+                  </div>
                 </div>
               )}
               <p className="text-lg font-semibold text-gray-800">

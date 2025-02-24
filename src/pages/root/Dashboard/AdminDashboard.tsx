@@ -126,6 +126,8 @@ const AdminDashboard = ({
     }
   };
 
+  console.log(filteredCar);
+
   return (
     <div className="min-h-screen bg-gray-900 text-white/50 p-6">
       {/* Car details */}
@@ -161,6 +163,7 @@ const AdminDashboard = ({
                 />
               )}
             </div>
+
             <div className="space-y-4 bg-white p-6 rounded-lg shadow-md border border-gray-200">
               <p className="text-lg font-semibold text-gray-800">
                 <strong className="text-gray-900">Brand:</strong>{" "}
@@ -175,8 +178,8 @@ const AdminDashboard = ({
                 {filteredCar.year}
               </p>
               <p className="text-lg font-semibold text-gray-800">
-                <strong className="text-gray-900">Price per Day:</strong> $
-                {filteredCar.pricePerDay}
+                <strong className="text-gray-900">Price per Day:</strong>{" "}
+                <p className="text-nowrap">RW {filteredCar.pricePerDay}</p>
               </p>
               <p className="text-lg font-semibold text-gray-800">
                 <strong className="text-gray-900">Fuel Type:</strong>{" "}
@@ -192,10 +195,13 @@ const AdminDashboard = ({
               </p>
               <p className="text-lg font-semibold text-black">
                 <strong className="text-gray-900">Available Until:</strong>
-                <CarCountdown availableUntil={filteredCar.availableUntil} />
+                <div className="bg-blue-700 px-2">
+                  {/* Pass the formatted availableUntil to CarCountdown */}
+                  <CarCountdown availableUntil={filteredCar.availableUntil} />
+                </div>
               </p>
               <p className="text-lg font-semibold text-gray-800">
-                <strong className="text-gray-900">Is Approved:</strong>{" "}
+                <strong className="text-gray-900">Is Approved:</strong>
                 {filteredCar.isApproved ? "Yes" : "No"}
               </p>
               <p className="text-lg font-semibold text-gray-800">
@@ -204,6 +210,35 @@ const AdminDashboard = ({
                 </strong>{" "}
                 {filteredCar.isRentedByBusiness ? "Yes" : "No"}
               </p>
+              <p className="text-lg font-semibold text-gray-800">
+                <strong className="text-gray-900">Location:</strong>{" "}
+                {filteredCar.location}
+              </p>
+
+              {/* Display the insurance file */}
+
+              <div className="flex flex-col items-start justify-between gap-5">
+                {filteredCar.insuranceFileUrl && (
+                  <div>
+                    <img
+                      src={filteredCar.insuranceFileUrl}
+                      alt={filteredCar.model}
+                      className="mt-4 w-full mb-2 h-48 object-cover rounded-lg shadow"
+                    />
+                    <p className="text-black">Insurance card</p>
+                  </div>
+                )}
+                {filteredCar.yellowCardFileUrl && (
+                  <div>
+                    <img
+                      src={filteredCar.yellowCardFileUrl}
+                      alt={filteredCar.model}
+                      className="mt-4 w-full mb-2 h-48 object-cover rounded-lg shadow"
+                    />
+                    <p className="text-black">Yellow card</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -272,7 +307,7 @@ const AdminDashboard = ({
                 <table className="w-full border border-gray-700">
                   <thead className="bg-gray-800 text-white">
                     <tr>
-                      <th className="text-nowrap p-3">Image</th>
+                      <th className="text-nowrap px-14">Image</th>
                       <th className="text-nowrap p-3">Brand</th>
                       <th className="text-nowrap p-3">Model</th>
                       <th className="text-nowrap p-3">Year</th>
@@ -300,7 +335,9 @@ const AdminDashboard = ({
                         <td className="p-3">{car.brand}</td>
                         <td className="p-3">{car.model}</td>
                         <td className="p-3">{car.year}</td>
-                        <td className="p-3">${car.pricePerDay}</td>
+                        <td className="p-3">
+                          <p className="text-nowrap">RW {car.pricePerDay}</p>
+                        </td>
                         <td className="p-3 text-nowrap">
                           {car.isApproved ? (
                             <span className="text-green-500">Approved</span>

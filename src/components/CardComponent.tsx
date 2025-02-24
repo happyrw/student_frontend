@@ -33,7 +33,7 @@ const CarCard = ({ car }: { car: ICarCard }) => {
 
         {/* Price & Rent Button */}
         <div className="flex justify-between items-center mt-3">
-          <p className="text-xl font-bold">${car.pricePerDay}/day</p>
+          <p className="text-xl font-bold">RW {car.pricePerDay}/day</p>
           <Link to={`/single_car_item/${car._id}`}>
             <button className="px-4 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600">
               {user.role === "business" ? "Rent Now" : "View Now"}
