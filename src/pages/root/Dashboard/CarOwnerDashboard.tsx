@@ -1,4 +1,4 @@
-import { endPoint } from "@components/AuthContext";
+import { endPoint, useUserContext } from "@components/AuthContext";
 import CarCountdown from "@components/CarCountdown";
 import { Button } from "@components/components/ui/button";
 import { Check, Eye, Plus, X } from "lucide-react";
@@ -42,6 +42,8 @@ const CarOwnerDashboard = ({
   const [loadingConfirm, setLoadingConfirm] = useState(false);
   const [loadingCancel, setLoadingCancel] = useState(false);
   const [currentTime, setCurrentTime] = useState();
+
+  const { user } = useUserContext();
 
   const handleCarClick = (carId: string) => {
     const car = cars.find((c: ICar) => c._id === carId);
@@ -93,7 +95,7 @@ const CarOwnerDashboard = ({
     action: string,
     carId: string
   ) => {
-    const proceed = window.confirm(carId);
+    const proceed = window.confirm("Are you sure you want to proceed?");
     if (!proceed) return;
     if (action === "confirmed") {
       setLoadingConfirm(true);
@@ -138,7 +140,10 @@ const CarOwnerDashboard = ({
       },
     });
     const data = await response.json();
-    setOrders(data);
+    const filteredData = data.filter(
+      (item: any) => String(item.carOwnerId) === String(user._id)
+    );
+    setOrders(filteredData);
   };
 
   useEffect(() => {
@@ -343,7 +348,7 @@ const CarOwnerDashboard = ({
                           <div className="flex items-center gap-2">
                             {order.status === "confirmed" ||
                             order.status === "cancelled" ? (
-                              <button className="flex items-center bg-blue-700 w-full justify-center gap-4 rounded-md py-2">
+                              <button className="flex items-center bg-blue-700 w-full justify-center gap-4 rounded-md py-2 px-4">
                                 Done <Check />
                               </button>
                             ) : (

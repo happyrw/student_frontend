@@ -2,7 +2,7 @@ import { endPoint, useUserContext } from "@components/AuthContext";
 import { Link } from "react-router-dom";
 import CarOwnerDashboard, { ICar } from "./CarOwnerDashboard";
 import BusinessDashboard from "./BusinessDashboard";
-import AdminDashboard from "./AdminDashboard";
+import AdminDashboard, { IBusiness } from "./AdminDashboard";
 import { Button } from "@components/components/ui/button";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -12,8 +12,10 @@ const MainDashboard = () => {
   const { user } = useUserContext();
   const [loading, setLoading] = useState(false);
   const [cars, setCars] = useState<ICar[]>([]);
+  const [business, setBusiness] = useState<IBusiness[]>([]);
   const [businesses, setBusinesses] = useState([]);
   const [businessName, setBusinessName] = useState();
+  const [businessDeclineReason, setBusinessDeclineReason] = useState();
   const isAdmin = user.email === import.meta.env.VITE_ADMIN_EMAIL_ADDRESS;
 
   const token = localStorage.getItem("rental_token");
@@ -85,8 +87,9 @@ const MainDashboard = () => {
         }
       );
       const data = await response.json();
-      setCars(data.business);
+      setBusiness(data.business);
       setBusinessName(data.business.name);
+      setBusinessDeclineReason(data.business.declineReason);
     } catch (error) {
       console.log(error);
     } finally {
@@ -172,7 +175,14 @@ const MainDashboard = () => {
           {user.role == "carOwner" && (
             <CarOwnerDashboard cars={cars} setCars={setCars} />
           )}
-          {user.role === "business" && <BusinessDashboard cars={cars} />}
+          {user.role === "business" && (
+            <BusinessDashboard
+              cars={business}
+              businessDeclineReason={
+                businessDeclineReason && businessDeclineReason
+              }
+            />
+          )}
           {isAdmin && (
             <AdminDashboard
               cars={cars}

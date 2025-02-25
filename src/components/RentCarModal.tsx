@@ -131,7 +131,7 @@ const RentCarModal = ({
             <label className="block text-gray-700">Total Price</label>
             <input
               type="text"
-              value={`$${orderData.totalAmount}`}
+              value={`RW ${orderData.totalAmount}`}
               readOnly
               className="w-full border p-2 rounded-lg bg-gray-100 cursor-not-allowed text-black"
             />

@@ -1,12 +1,39 @@
 import { Loader } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const BusinessDashboard = ({ cars }: { cars: any }) => {
+const BusinessDashboard = ({
+  cars,
+  businessDeclineReason,
+}: {
+  cars: any;
+  businessDeclineReason: string | undefined;
+}) => {
   const orderedCars = cars?.orders;
+
+  console.log(orderedCars);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
       <h2 className="text-3xl font-bold mb-4">Company Dashboard</h2>
+      {businessDeclineReason && businessDeclineReason !== "" && (
+        <div className="bg-red-500 p-2 rounded-lg mb-2">
+          <p className="text-white text-sm mb-4">
+            Your business has been declined. Reason:{" "}
+            <span className="underline font-bold block">
+              {businessDeclineReason}
+            </span>
+            <br />
+            For more details please click
+            <a
+              href="mailto:shyakajeandedieu31@gmail.com"
+              className="underline text-black font-bold px-4"
+            >
+              HERE
+            </a>
+            to contact us
+          </p>
+        </div>
+      )}
 
       <div>
         {!orderedCars ? (
@@ -35,52 +62,60 @@ const BusinessDashboard = ({ cars }: { cars: any }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {orderedCars.map(
-                      (order: any) =>
-                        order.carId ? ( // ✅ Only render rows if `carId` exists
-                          <tr
-                            key={order._id}
-                            className="border-b border-gray-700"
-                          >
-                            <td className="p-3">
-                              <img
-                                src={
-                                  order.carId.images?.[0] || "/placeholder.jpg"
-                                }
-                                alt={order.carId.brand || "Car"}
-                                className="w-20 h-14 object-cover rounded-md"
-                              />
-                            </td>
-                            <td className="p-3">{order.carId.brand}</td>
-                            <td className="p-3">{order.carId.model}</td>
-                            <td className="p-3">
-                              {new Date(order.startDate).toLocaleDateString()}
-                            </td>
-                            <td className="p-3">
-                              {new Date(order.endDate).toLocaleDateString()}
-                            </td>
-                            <td className="p-3">${order.totalPrice}</td>
-                            <td className="p-3 text-nowrap">
-                              {order.status === "pending" ? (
-                                <span className="text-red-500">Pending</span>
-                              ) : (
-                                <span className="text-green-500">Approved</span>
-                              )}
-                            </td>
+                    {orderedCars.map((order: any) =>
+                      order.carId ? ( // ✅ Only render rows if `carId` exists
+                        <tr
+                          key={order._id}
+                          className="border-b border-gray-700"
+                        >
+                          <td className="p-3">
+                            <img
+                              src={
+                                order.carId.images?.[0] || "/placeholder.jpg"
+                              }
+                              alt={order.carId.brand || "Car"}
+                              className="w-20 h-14 object-cover rounded-md"
+                            />
+                          </td>
+                          <td className="p-3">{order.carId.brand}</td>
+                          <td className="p-3">{order.carId.model}</td>
+                          <td className="p-3">
+                            {new Date(order.startDate).toLocaleDateString()}
+                          </td>
+                          <td className="p-3">
+                            {new Date(order.endDate).toLocaleDateString()}
+                          </td>
+                          <td className="p-3 text-nowrap">
+                            RW {order.totalPrice.toFixed(2)}
+                          </td>
+                          <td className="p-3 text-nowrap">
+                            {order.status === "pending" ? (
+                              <span className="text-red-500">Pending</span>
+                            ) : (
+                              <span className="text-green-500">Approved</span>
+                            )}
+                          </td>
+                          {order.status === "confirmed" ? (
                             <td className="p-3">{order.ownerContact}</td>
-                            <td className="p-3 text-nowrap">
-                              {order.carId.location}
-                            </td>
-                            <td className="p-3">
-                              <Link
-                                to={`/single_car_item/${order.carId._id}`}
-                                className="w-full py-2 px-4 bg-white text-black mt-2 hover:text-black hover:bg-white rounded-lg"
-                              >
-                                View
-                              </Link>
-                            </td>
-                          </tr>
-                        ) : null // ✅ Hide row if `carId` is missing
+                          ) : (
+                            <td className="p-3">Pending...</td>
+                          )}
+                          <td className="p-3 text-nowrap">
+                            {order.carId.location}
+                          </td>
+                          <td className="p-3 text-nowrap">
+                            {order.carId.isRentedByBusiness}
+                          </td>
+                          <td className="p-3">
+                            <Link
+                              to={`/single_car_item/${order.carId._id}`}
+                              className="w-full py-2 px-4 bg-white text-black mt-2 hover:text-black hover:bg-white rounded-lg"
+                            >
+                              View
+                            </Link>
+                          </td>
+                        </tr>
+                      ) : null
                     )}
                   </tbody>
                 </table>

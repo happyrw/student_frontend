@@ -3,6 +3,7 @@ import { ICar } from "./CarOwnerDashboard";
 import { useEffect, useState } from "react";
 import { Button } from "@components/components/ui/button";
 import CarCountdown from "@components/CarCountdown";
+import { X } from "lucide-react";
 
 export interface IBusiness {
   contact: string;
@@ -17,6 +18,7 @@ export interface IBusiness {
   rentals: string;
   tin: string;
   _id: string;
+  declineReason: string;
 }
 
 const AdminDashboard = ({
@@ -35,8 +37,14 @@ const AdminDashboard = ({
   const [filteredBusinesses, setFilteredBusinesses] = useState<IBusiness[]>([]);
   const [filteredCar, setFilteredCar] = useState<ICar>();
   const [approveType, setApproveType] = useState("car");
+  const [declineReason, setDeclineReason] = useState("");
+  const [showTextArea, setShowTextArea] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [isCarApproved, setIsCarApproved] = useState(false);
 
   const approveCar = async (carId: string) => {
+    setIsCarApproved(true);
     const response = await fetch(`${endPoint}/root/cars/update/${carId}`, {
       method: "PUT",
       headers: {
@@ -51,10 +59,12 @@ const AdminDashboard = ({
         car._id === carId ? { ...car, isApproved: true } : car
       );
       setCars(updatedCars);
+      setIsCarApproved(false);
     }
   };
 
   const approveBusiness = async (businessId: string) => {
+    setIsApproving(true);
     const response = await fetch(
       `${endPoint}/root/business/update/${businessId}`,
       {
@@ -75,6 +85,7 @@ const AdminDashboard = ({
       );
       setBusinesses(updatedBusiness);
     }
+    setIsApproving(false);
   };
 
   const filterData = () => {
@@ -122,6 +133,32 @@ const AdminDashboard = ({
       setFilteredCar(detailCar);
     }
   };
+
+  const declineBusiness = async (businessId: string) => {
+    setSubmitting(true);
+    const response = await fetch(
+      `${endPoint}/root/business/update/${businessId}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          declineReason,
+        }),
+      }
+    );
+
+    const data = await response.json();
+    if (data) {
+      const updatedBusinesses = businesses.filter(
+        (business: any) => business.declineReason === declineReason
+      );
+      setBusinesses(updatedBusinesses);
+      setSubmitting(false);
+    }
+  };
+  // TODO:
 
   return (
     <div className="min-h-screen bg-gray-900 text-white/50 p-6">
@@ -341,10 +378,11 @@ const AdminDashboard = ({
                         <td className="p-3 text-nowrap">
                           {!car.isApproved && (
                             <button
+                              disabled={isCarApproved}
                               onClick={() => approveCar(car._id)}
                               className="bg-blue-500 text-white p-2 rounded w-full"
                             >
-                              Approve
+                              {isCarApproved ? "Approving..." : "Approve"}
                             </button>
                           )}
                           {car.isApproved && (
@@ -384,7 +422,7 @@ const AdminDashboard = ({
                       <th className="text-nowrap p-3">Tin</th>
                       <th className="text-nowrap p-3">License File</th>
                       <th className="text-nowrap p-3">Approval</th>
-                      <th className="text-nowrap p-3">Action</th>
+                      <th className="text-nowrap p-3 px-[70px]">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -411,26 +449,76 @@ const AdminDashboard = ({
                           {business.isApproved ? (
                             <span className="text-green-500">Approved</span>
                           ) : (
-                            <span className="text-red-500">Pending</span>
+                            <span className="text-red-500">
+                              {!business.isApproved &&
+                              business.declineReason !== ""
+                                ? "Rejected"
+                                : "Pending"}
+                            </span>
                           )}
                         </td>
                         <td className="p-3 text-nowrap">
-                          {!business.isApproved && (
-                            <button
-                              onClick={() => approveBusiness(business._id)}
-                              className="bg-blue-500 text-white p-2 rounded w-full"
-                            >
-                              Approve
-                            </button>
-                          )}
-                          {business.isApproved && (
-                            <Button
-                              variant="outline"
-                              className="p-2 rounded w-full"
-                            >
-                              ☑️
-                            </Button>
-                          )}
+                          {!business.isApproved &&
+                            business.declineReason === "" && (
+                              <div className="flex items-center gap-4">
+                                <button
+                                  disabled={isApproving}
+                                  onClick={() => approveBusiness(business._id)}
+                                  className="bg-blue-500 text-white p-2 rounded w-full"
+                                >
+                                  {isApproving ? "Approving..." : "Approve"}
+                                </button>
+                                <button
+                                  onClick={() => setShowTextArea(true)}
+                                  className="bg-red-500 text-white p-2 rounded w-full"
+                                >
+                                  Decline
+                                </button>
+                                {showTextArea && (
+                                  <div className="fixed z-20 inset-0 bg-black/50 flex items-center justify-center">
+                                    <div className="w-fit px-4 rounded-lg bg-white text-black flex flex-col space-y-3 py-10">
+                                      <Button
+                                        className="w-fit self-end"
+                                        onClick={() => setShowTextArea(false)}
+                                      >
+                                        <X />
+                                      </Button>
+                                      <p className="font-bold">
+                                        Provide a good reason why you decline
+                                        this company.
+                                      </p>
+                                      <textarea
+                                        rows={3}
+                                        value={declineReason}
+                                        onChange={(e) =>
+                                          setDeclineReason(e.target.value)
+                                        }
+                                        className="border w-full p-2 mt-2 rounded border-blue-500"
+                                      ></textarea>
+                                      <Button
+                                        disabled={submitting}
+                                        onClick={() =>
+                                          declineBusiness(business._id)
+                                        }
+                                      >
+                                        {submitting
+                                          ? "Submitting..."
+                                          : "Submit"}
+                                      </Button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          {business.isApproved ||
+                            (business.declineReason !== "" && (
+                              <Button
+                                variant="outline"
+                                className="p-2 rounded w-full bg-blue-700 text-black"
+                              >
+                                ☑️
+                              </Button>
+                            ))}
                         </td>
                       </tr>
                     ))}

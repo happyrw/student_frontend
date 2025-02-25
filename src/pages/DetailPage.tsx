@@ -137,8 +137,7 @@ const DetailPage = () => {
           ) : (
             <div className="bg-red-700/15 py-2 px-4 rounded-lg mt-3">
               <p className="text-red-500 font-semibold mt-6">
-                Your account is not approved yet. Please contact the car owner
-                for more information.
+                Approvement pending...
               </p>
             </div>
           ))}

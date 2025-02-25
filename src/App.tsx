@@ -31,3 +31,6 @@ export default function Home() {
     </Routes>
   );
 }
+
+//
+// "build": "tsc -b && vite build",
