@@ -22,6 +22,7 @@ export interface ICar {
   insuranceFileUrl: string;
   yellowCardFileUrl: string;
   updatedAt: string;
+  declineReason: string;
   year: string;
   _id: string;
 }
@@ -150,16 +151,19 @@ const CarOwnerDashboard = ({
     getCarOrders();
   }, []);
 
-  // FUNCTION TO DISPLAY EXISTING CAR AVAILABILITY TIME IN 03/12/2020 FORMAT
   function CarAvailability(availableUntil: string) {
     const date = new Date(availableUntil);
+    console.log("available time ", availableUntil);
 
-    // Format the date as yyyy-mm-dd
+    // Format the date as yyyy-mm-ddTHH:mm
     const formattedDate = `${date.getFullYear()}-${(date.getMonth() + 1)
       .toString()
-      .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
+      .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}T${date
+      .getHours()
+      .toString()
+      .padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
 
-    setCurrentTime(formattedDate as any);
+    setCurrentTime(formattedDate as any); // Set currentTime to the formatted date
   }
 
   return (
@@ -222,61 +226,79 @@ const CarOwnerDashboard = ({
                       <th className="text-nowrap py-2 px-7 border border-gray-600">
                         Status
                       </th>
+                      <th className="text-nowrap py-2 px-7 border border-gray-600">
+                        Taken by company
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {cars.map((car) => (
-                      <tr
-                        key={car._id}
-                        className="border-t border-gray-600 hover:bg-gray-800 transition"
-                      >
-                        <td className="py-2 px-4 border border-gray-600">
-                          <img
-                            src={
-                              car.images?.[0] ||
-                              "https://via.placeholder.com/100"
-                            }
-                            alt={car.brand}
-                            className="w-20 h-14 object-cover rounded"
-                          />
-                        </td>
-                        <td className="py-2 px-4 border border-gray-600">
-                          {car.brand}
-                        </td>
-                        <td className="py-2 px-4 border border-gray-600">
-                          {car.model}
-                        </td>
-                        <td className="py-2 px-4 border border-gray-600">
-                          {car.year}
-                        </td>
-                        <td className="py-2 px-4 border border-gray-600">
-                          {car.fuelType}
-                        </td>
-                        <td className="py-2 px-4 border border-gray-600">
-                          <div className="flex items-center gap-2 flex-nowrap">
-                            <p className="text-nowrap">RW {car.pricePerDay}</p>
-                            <button
-                              onClick={() => handleCarClick(car._id)}
-                              className="text-black bg-white w-full flex items-center justify-center rounded-md px-4"
-                            >
-                              <Eye />
-                            </button>
+                      <>
+                        <tr
+                          key={car._id}
+                          className="border-t border-gray-600 hover:bg-gray-800 transition"
+                        >
+                          <td className="py-2 px-4 border border-gray-600">
+                            <img
+                              src={car.images?.[0]}
+                              alt={car.brand}
+                              className="w-20 h-14 object-cover rounded"
+                            />
+                          </td>
+                          <td className="py-2 px-4 border border-gray-600">
+                            {car.brand}
+                          </td>
+                          <td className="py-2 px-4 border border-gray-600">
+                            {car.model}
+                          </td>
+                          <td className="py-2 px-4 border border-gray-600">
+                            {car.year}
+                          </td>
+                          <td className="py-2 px-4 border border-gray-600">
+                            {car.fuelType}
+                          </td>
+                          <td className="py-2 px-4 border border-gray-600">
+                            <div className="flex items-center gap-2 flex-nowrap">
+                              <p className="text-nowrap">
+                                RW {car.pricePerDay}
+                              </p>
+                              <button
+                                onClick={() => handleCarClick(car._id)}
+                                className="text-black bg-white w-full flex items-center justify-center rounded-md px-4"
+                              >
+                                <Eye />
+                              </button>
+                            </div>
+                          </td>
+                          <td className="py-2 px-4 border border-gray-600">
+                            {car.transmission}
+                          </td>
+                          <td className="py-2 px-4 border border-gray-600">
+                            <CarCountdown availableUntil={car.availableUntil} />
+                          </td>
+                          <td className="py-2 px-4 border border-gray-600">
+                            {car.isApproved ? (
+                              <span className="text-green-400">Approved</span>
+                            ) : car.declineReason !== undefined ? (
+                              <span className="text-red-400">Rejected</span>
+                            ) : (
+                              <span className="text-yellow-400">Pending</span>
+                            )}
+                          </td>
+                          <td className="py-2 px-4 border border-gray-600 text-center">
+                            {car.isRentedByBusiness ? "True" : "False"}
+                          </td>
+                        </tr>
+                        {car.declineReason !== undefined && (
+                          <div className="text-white bg-red-700/15 p-2 rounded-lg text-sm">
+                            The above car was rejected with the following
+                            message:{" "}
+                            <span className="font-bold underline block">
+                              {car.declineReason}
+                            </span>
                           </div>
-                        </td>
-                        <td className="py-2 px-4 border border-gray-600">
-                          {car.transmission}
-                        </td>
-                        <td className="py-2 px-4 border border-gray-600">
-                          <CarCountdown availableUntil={car.availableUntil} />
-                        </td>
-                        <td className="py-2 px-4 border border-gray-600">
-                          {car.isApproved ? (
-                            <span className="text-green-400">Approved</span>
-                          ) : (
-                            <span className="text-yellow-400">Pending</span>
-                          )}
-                        </td>
-                      </tr>
+                        )}
+                      </>
                     ))}
                   </tbody>
                 </table>
@@ -460,22 +482,33 @@ const CarOwnerDashboard = ({
               </p>
               {/* TIME INPUT */}
               {addTime ? (
-                <div className="flex items-center justify-between gap-2">
-                  <input
-                    type="datetime-local"
-                    className="w-full text-black border border-gray-300 rounded-md p-2 focus:outline-none"
-                    value={availableUntil ? availableUntil : currentTime}
-                    onChange={(e) => setAvailableUntil(e.target.value)}
-                  />
-                  <div className="flex gap-2">
-                    <Button disabled={saving} onClick={handleAddTime}>
-                      {saving ? "Saving..." : "Save"}
-                    </Button>
+                carForDetail.isRentedByBusiness ? (
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-red-700 bg-red-700/15 py-2 px-5 rounded-lg">
+                      You can't update time for a rented car
+                    </p>
                     <Button onClick={() => setAddTime(false)}>
                       <X />
                     </Button>
                   </div>
-                </div>
+                ) : (
+                  <div className="flex items-center justify-between gap-2">
+                    <input
+                      type="datetime-local"
+                      className="w-full text-black border border-gray-300 rounded-md p-2 focus:outline-none"
+                      value={availableUntil ? availableUntil : currentTime}
+                      onChange={(e) => setAvailableUntil(e.target.value)}
+                    />
+                    <div className="flex gap-2">
+                      <Button disabled={saving} onClick={handleAddTime}>
+                        {saving ? "Saving..." : "Save"}
+                      </Button>
+                      <Button onClick={() => setAddTime(false)}>
+                        <X />
+                      </Button>
+                    </div>
+                  </div>
+                )
               ) : (
                 <div className="flex items-center justify-between">
                   <div className="text-lg font-semibold text-black">

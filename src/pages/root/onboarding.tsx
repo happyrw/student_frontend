@@ -102,6 +102,11 @@ const Onboarding = () => {
       return alert("You already have a role");
     }
 
+    if (businessData.contact.length < 10) {
+      setError("Contact number should be at least 10 characters.");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
@@ -182,7 +187,7 @@ const Onboarding = () => {
                 Contact
               </label>
               <input
-                type="text"
+                type="number"
                 name="contact"
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
@@ -255,7 +260,7 @@ const Onboarding = () => {
                 Contact
               </label>
               <input
-                type="text"
+                type="number"
                 name="contact"
                 value={businessData.contact}
                 onChange={handleChange}

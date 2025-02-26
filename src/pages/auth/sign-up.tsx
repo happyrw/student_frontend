@@ -1,6 +1,6 @@
 import { endPoint, useUserContext } from "@components/AuthContext";
 import { Loader } from "lucide-react";
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 const SignUp = () => {
@@ -15,7 +15,8 @@ const SignUp = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const { setUser, setIsAuthenticated } = useUserContext();
+  const { setUser, setIsAuthenticated, user, isAuthenticated } =
+    useUserContext();
 
   const handleImageChange = (e: any) => {
     const file = e.target.files?.[0];
@@ -89,11 +90,11 @@ const SignUp = () => {
     }
   };
 
-  // useEffect(() => {
-  //   if (isAuthenticated) {
-  //     navigate("/"); // Redirect to the homepage if the user is authenticated
-  //   }
-  // }, [isAuthenticated, navigate]);
+  useEffect(() => {
+    if (isAuthenticated && user.role) {
+      navigate("/"); // Redirect to the homepage if the user is authenticated
+    }
+  }, [isAuthenticated, navigate]);
 
   return (
     <>

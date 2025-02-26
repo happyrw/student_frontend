@@ -70,16 +70,13 @@ const Navbar = () => {
             <div className="relative group">
               <div className="flex items-center gap-2">
                 <div className="bg-gray-600 flex items-center px-4 py-[4px] rounded-lg mr-4">
-                  <button className="flex items-center gap-[3px] mr-5 pr-2 rounded-lg transition">
+                  <div className="w-[35px] h-[35px] rounded-lg transition">
                     <img
-                      src={user?.imageUrl || "/default-avatar.png"}
+                      src={user?.imageUrl}
                       alt="User Avatar"
-                      className="w-8 h-8 rounded-full object-cover shrink-0"
+                      className="w-full h-full rounded-full object-cover shrink-0"
                     />
-                    <span className="text-nowrap ">
-                      {user?.fullname || "Profile"}
-                    </span>
-                  </button>
+                  </div>
                 </div>
                 <button
                   onClick={handleLogOut}
@@ -88,21 +85,6 @@ const Navbar = () => {
                   Logout
                 </button>
               </div>
-              {/* Dropdown Menu */}
-              {/* <div className="absolute right-0 mt-2 w-40 bg-gray-800 text-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity overflow-hidden">
-                <Link
-                  to="/profile"
-                  className="block px-4 py-2 hover:bg-gray-700"
-                >
-                  Profile
-                </Link>
-                <button
-                  onClick={handleLogOut}
-                  className="block px-4 py-2 text-left w-full hover:bg-gray-700"
-                >
-                  Logout
-                </button>
-              </div> */}
             </div>
           </>
         ) : (

@@ -8,6 +8,8 @@ import MainDashboard from "./pages/root/Dashboard/MainDashboard";
 import CreateUpload from "./pages/root/CreateUpload";
 import HomePage from "./pages/root/HomePage";
 import DetailPage from "./pages/DetailPage";
+import About from "./pages/root/about";
+import Contact from "./pages/root/contact";
 
 export default function Home() {
   const { isLoading, loading } = useUserContext();
@@ -18,7 +20,8 @@ export default function Home() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
-      <Route path="/about" element={<h1>About</h1>} />
+      <Route path="/about" element={<About />} />
+      <Route path="/contact" element={<Contact />} />
       <Route path="/sign-in" element={<SignIn />} />
       <Route path="/sign-up" element={<SignUp />} />
       <Route path="/onboarding/:userId" element={<Onboarding />} />

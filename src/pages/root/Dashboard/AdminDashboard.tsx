@@ -3,7 +3,7 @@ import { ICar } from "./CarOwnerDashboard";
 import { useEffect, useState } from "react";
 import { Button } from "@components/components/ui/button";
 import CarCountdown from "@components/CarCountdown";
-import { X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 
 export interface IBusiness {
   contact: string;
@@ -92,10 +92,17 @@ const AdminDashboard = ({
     let filtered;
     switch (type) {
       case "Pending":
-        filtered = cars.filter((car) => !car.isApproved);
+        filtered = cars.filter(
+          (car) => !car.isApproved && car.declineReason === undefined
+        );
         break;
       case "Approved":
         filtered = cars.filter((car) => car.isApproved);
+        break;
+      case "Rejected":
+        filtered = cars.filter(
+          (car) => !car.isApproved && car.declineReason !== undefined
+        );
         break;
       default:
         filtered = cars;
@@ -107,10 +114,19 @@ const AdminDashboard = ({
     let filtered;
     switch (type) {
       case "Pending":
-        filtered = businesses.filter((business) => !business.isApproved);
+        filtered = businesses.filter(
+          (business) =>
+            !business.isApproved && business.declineReason === undefined
+        );
         break;
       case "Approved":
         filtered = businesses.filter((business) => business.isApproved);
+        break;
+      case "Rejected":
+        filtered = businesses.filter(
+          (business) =>
+            !business.isApproved && business.declineReason !== undefined
+        );
         break;
       default:
         filtered = businesses;
@@ -151,15 +167,29 @@ const AdminDashboard = ({
 
     const data = await response.json();
     if (data) {
-      const updatedBusinesses = businesses.filter(
-        (business: any) => business.declineReason === declineReason
-      );
-      setBusinesses(updatedBusinesses);
-      setSubmitting(false);
+      window.location.reload();
     }
   };
-  // TODO:
 
+  const declineCar = async (carId: string) => {
+    setSubmitting(true);
+    const response = await fetch(`${endPoint}/root/cars/update/${carId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        declineReason,
+      }),
+    });
+
+    const data = await response.json();
+    if (data) {
+      window.location.reload();
+    }
+  };
+
+  console.log("businesses", businesses);
   return (
     <div className="min-h-screen bg-gray-900 text-white/50 p-6">
       {/* Car details */}
@@ -298,15 +328,27 @@ const AdminDashboard = ({
         <div className="flex items-center gap-2 mb-2">
           <Button
             onClick={() => setType("Pending")}
-            className="w-full bg-red-700"
+            className={`w-full bg-black ${
+              type === "Pending" && "border-b border-white"
+            }`}
           >
             Pending cars
           </Button>
           <Button
             onClick={() => setType("Approved")}
-            className="w-full bg-green-700"
+            className={`w-full bg-green-700 hover:bg-green-900 ${
+              type === "Approved" && "border-b border-white"
+            }`}
           >
             Approved cars
+          </Button>
+          <Button
+            onClick={() => setType("Rejected")}
+            className={`w-full bg-red-700 hover:bg-red-900 ${
+              type === "Rejected" && "border-b border-white"
+            }`}
+          >
+            Rejected cars
           </Button>
         </div>
       )}
@@ -314,219 +356,327 @@ const AdminDashboard = ({
         <div className="flex items-center gap-2 mb-2">
           <Button
             onClick={() => setType("Pending")}
-            className="w-full bg-red-700"
+            className={`w-full bg-black ${
+              type === "Pending" && "border-b border-white"
+            }`}
           >
             Pending company
           </Button>
           <Button
             onClick={() => setType("Approved")}
-            className="w-full bg-green-700"
+            className={`w-full bg-green-700 hover:bg-green-900 ${
+              type === "Approved" && "border-b border-white"
+            }`}
           >
             Approved company
+          </Button>
+          <Button
+            onClick={() => setType("Rejected")}
+            className={`w-full bg-red-700 hover:bg-red-900 ${
+              type === "Rejected" && "border-b border-white"
+            }`}
+          >
+            Rejected company
           </Button>
         </div>
       )}
 
       <div>
-        {approveType === "car" && (
-          <div>
-            {filteredCars.length === 0 ? (
-              <p className="text-gray-400">No cars available for approval.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full border border-gray-700">
-                  <thead className="bg-gray-800 text-white">
-                    <tr>
-                      <th className="text-nowrap px-14">Image</th>
-                      <th className="text-nowrap p-3">Brand</th>
-                      <th className="text-nowrap p-3">Model</th>
-                      <th className="text-nowrap p-3">Year</th>
-                      <th className="text-nowrap p-3">Price/Day</th>
-                      <th className="text-nowrap p-3">Status</th>
-                      <th className="text-nowrap p-3">Approval</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredCars.map((car) => (
-                      <tr key={car._id} className="border-b border-gray-700">
-                        <td className="p-3">
-                          <img
-                            src={car.images[0]}
-                            alt={car.brand}
-                            className="w-full h-20 object-cover rounded-md"
-                          />
-                          <button
-                            onClick={() => showPopup(car._id)}
-                            className="w-full py-[3px] bg-white text-black mt-2 hover:text-black hover:bg-white rounded-lg"
-                          >
-                            view
-                          </button>
-                        </td>
-                        <td className="p-3">{car.brand}</td>
-                        <td className="p-3">{car.model}</td>
-                        <td className="p-3">{car.year}</td>
-                        <td className="p-3">
-                          <p className="text-nowrap">RW {car.pricePerDay}</p>
-                        </td>
-                        <td className="p-3 text-nowrap">
-                          {car.isApproved ? (
-                            <span className="text-green-500">Approved</span>
-                          ) : (
-                            <span className="text-red-500">Pending</span>
-                          )}
-                        </td>
-                        <td className="p-3 text-nowrap">
-                          {!car.isApproved && (
-                            <button
-                              disabled={isCarApproved}
-                              onClick={() => approveCar(car._id)}
-                              className="bg-blue-500 text-white p-2 rounded w-full"
-                            >
-                              {isCarApproved ? "Approving..." : "Approve"}
-                            </button>
-                          )}
-                          {car.isApproved && (
-                            <Button
-                              variant="outline"
-                              className="p-2 rounded w-full"
-                            >
-                              ☑️
-                            </Button>
-                          )}
-                        </td>
+        {approveType === "car" &&
+          (filteredCars ? (
+            <div>
+              {filteredCars.length === 0 ? (
+                <p className="text-gray-400">
+                  {type === "Pending" && "No cars available for approval."}
+                  {type === "Approved" && "No approved cars available"}
+                  {type === "Rejected" && "No rejected cars available."}
+                </p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full border border-gray-700">
+                    <thead className="bg-gray-800 text-white">
+                      <tr>
+                        <th className="text-nowrap px-14">Image</th>
+                        <th className="text-nowrap p-3">Brand</th>
+                        <th className="text-nowrap p-3">Model</th>
+                        <th className="text-nowrap p-3">Year</th>
+                        <th className="text-nowrap p-3">Price/Day</th>
+                        <th className="text-nowrap p-3">Status</th>
+                        <th className="text-nowrap p-3">Insurance</th>
+                        <th className="text-nowrap p-3">Yellow card</th>
+                        <th className="text-nowrap p-3">Approval</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      <div>
-        {approveType === "company" && (
-          <div>
-            {filteredBusinesses.length === 0 ? (
-              <p className="text-gray-400">
-                No company available for approval.
-              </p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full border border-gray-700">
-                  <thead className="bg-gray-800 text-white">
-                    <tr>
-                      <th className="text-nowrap p-3">Name</th>
-                      <th className="text-nowrap p-3">Location</th>
-                      <th className="text-nowrap p-3">Contact</th>
-                      <th className="text-nowrap p-3">Tin</th>
-                      <th className="text-nowrap p-3">License File</th>
-                      <th className="text-nowrap p-3">Approval</th>
-                      <th className="text-nowrap p-3 px-[70px]">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredBusinesses.map((business) => (
-                      <tr
-                        key={business._id}
-                        className="border-b border-gray-700"
-                      >
-                        <td className="p-3">{business.name}</td>
-                        <td className="p-3">{business.location}</td>
-                        <td className="p-3">{business.contact}</td>
-                        <td className="p-3">{business.tin}</td>
-                        <td className="p-3">
-                          <a
-                            href={business.licenseFile}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-500 text-nowrap"
-                          >
-                            View License
-                          </a>
-                        </td>
-                        <td className="p-3 text-nowrap">
-                          {business.isApproved ? (
-                            <span className="text-green-500">Approved</span>
-                          ) : (
-                            <span className="text-red-500">
-                              {!business.isApproved &&
-                              business.declineReason !== ""
-                                ? "Rejected"
-                                : "Pending"}
-                            </span>
-                          )}
-                        </td>
-                        <td className="p-3 text-nowrap">
-                          {!business.isApproved &&
-                            business.declineReason === "" && (
-                              <div className="flex items-center gap-4">
-                                <button
-                                  disabled={isApproving}
-                                  onClick={() => approveBusiness(business._id)}
-                                  className="bg-blue-500 text-white p-2 rounded w-full"
-                                >
-                                  {isApproving ? "Approving..." : "Approve"}
-                                </button>
-                                <button
-                                  onClick={() => setShowTextArea(true)}
-                                  className="bg-red-500 text-white p-2 rounded w-full"
-                                >
-                                  Decline
-                                </button>
-                                {showTextArea && (
-                                  <div className="fixed z-20 inset-0 bg-black/50 flex items-center justify-center">
-                                    <div className="w-fit px-4 rounded-lg bg-white text-black flex flex-col space-y-3 py-10">
-                                      <Button
-                                        className="w-fit self-end"
-                                        onClick={() => setShowTextArea(false)}
-                                      >
-                                        <X />
-                                      </Button>
-                                      <p className="font-bold">
-                                        Provide a good reason why you decline
-                                        this company.
-                                      </p>
-                                      <textarea
-                                        rows={3}
-                                        value={declineReason}
-                                        onChange={(e) =>
-                                          setDeclineReason(e.target.value)
-                                        }
-                                        className="border w-full p-2 mt-2 rounded border-blue-500"
-                                      ></textarea>
-                                      <Button
-                                        disabled={submitting}
-                                        onClick={() =>
-                                          declineBusiness(business._id)
-                                        }
-                                      >
-                                        {submitting
-                                          ? "Submitting..."
-                                          : "Submit"}
-                                      </Button>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
+                    </thead>
+                    <tbody>
+                      {filteredCars.map((car) => (
+                        <tr key={car._id} className="border-b border-gray-700">
+                          <td className="p-3">
+                            <img
+                              src={car.images[0]}
+                              alt={car.brand}
+                              className="w-full h-20 object-cover rounded-md"
+                            />
+                            <button
+                              onClick={() => showPopup(car._id)}
+                              className="w-full py-[3px] bg-white text-black mt-2 hover:text-black hover:bg-white rounded-lg"
+                            >
+                              view
+                            </button>
+                          </td>
+                          <td className="p-3">{car.brand}</td>
+                          <td className="p-3">{car.model}</td>
+                          <td className="p-3">{car.year}</td>
+                          <td className="p-3">
+                            <p className="text-nowrap">RW {car.pricePerDay}</p>
+                          </td>
+                          <td className="p-3 text-nowrap">
+                            {car.isApproved ? (
+                              <span className="text-green-500">Approved</span>
+                            ) : (
+                              <span className="text-red-500">
+                                {!car.isApproved &&
+                                car.declineReason !== undefined
+                                  ? "Rejected"
+                                  : "Pending"}
+                              </span>
                             )}
-                          {business.isApproved ||
-                            (business.declineReason !== "" && (
+                          </td>
+                          <td className="text-center">
+                            <a
+                              href={car.insuranceFileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-500 text-nowrap text-center"
+                            >
+                              View
+                            </a>
+                          </td>
+                          <td className="text-center">
+                            <a
+                              href={car.yellowCardFileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-500 text-nowrap"
+                            >
+                              View
+                            </a>
+                          </td>
+                          <td className="p-3 text-nowrap">
+                            {!car.isApproved &&
+                              car.declineReason === undefined && (
+                                <div className="flex items-center gap-4">
+                                  <button
+                                    disabled={isCarApproved}
+                                    onClick={() => approveCar(car._id)}
+                                    className="bg-blue-500 text-white p-2 rounded w-full"
+                                  >
+                                    {isCarApproved ? "Approving..." : "Approve"}
+                                  </button>
+                                  <button
+                                    onClick={() => setShowTextArea(true)}
+                                    className="bg-red-500 text-white p-2 rounded w-full"
+                                  >
+                                    Decline
+                                  </button>
+                                  {showTextArea && (
+                                    <div className="fixed z-20 inset-0 bg-black/50 flex items-center justify-center">
+                                      <div className="w-fit px-4 rounded-lg bg-white text-black flex flex-col space-y-3 py-10">
+                                        <Button
+                                          className="w-fit self-end"
+                                          onClick={() => setShowTextArea(false)}
+                                        >
+                                          <X />
+                                        </Button>
+                                        <p className="font-bold">
+                                          Provide a good reason why you decline
+                                          this{" "}
+                                          {type === "company"
+                                            ? "company"
+                                            : "car"}
+                                          .
+                                        </p>
+                                        <textarea
+                                          rows={3}
+                                          value={declineReason}
+                                          onChange={(e) =>
+                                            setDeclineReason(e.target.value)
+                                          }
+                                          className="border w-full p-2 mt-2 rounded border-blue-500"
+                                        ></textarea>
+                                        <Button
+                                          disabled={submitting}
+                                          onClick={() => declineCar(car._id)}
+                                        >
+                                          {submitting
+                                            ? "Submitting..."
+                                            : "Submit"}
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            {(car.isApproved ||
+                              car.declineReason !== undefined) && (
                               <Button
                                 variant="outline"
                                 className="p-2 rounded w-full bg-blue-700 text-black"
                               >
                                 ☑️
                               </Button>
-                            ))}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p>
+              <Loader2 className="w-7 h-7 animate-spin" />
+            </p>
+          ))}
+      </div>
+
+      <div>
+        {filteredBusinesses ? (
+          <div>
+            {approveType === "company" && (
+              <div>
+                {filteredBusinesses.length === 0 ? (
+                  <p className="text-gray-400">
+                    {type === "Pending" && "No company available for approval."}
+                    {type === "Approved" && "No approved company available"}
+                    {type === "Rejected" && "No rejected company available."}
+                  </p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full border border-gray-700">
+                      <thead className="bg-gray-800 text-white">
+                        <tr>
+                          <th className="text-nowrap p-3">Name</th>
+                          <th className="text-nowrap p-3">Location</th>
+                          <th className="text-nowrap p-3">Contact</th>
+                          <th className="text-nowrap p-3">Tin</th>
+                          <th className="text-nowrap p-3">License File</th>
+                          <th className="text-nowrap p-3">Approval</th>
+                          <th className="text-nowrap p-3 px-[70px]">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredBusinesses.map((business) => (
+                          <tr
+                            key={business._id}
+                            className="border-b border-gray-700"
+                          >
+                            <td className="p-3">{business.name}</td>
+                            <td className="p-3">{business.location}</td>
+                            <td className="p-3">{business.contact}</td>
+                            <td className="p-3">{business.tin}</td>
+                            <td className="p-3">
+                              <a
+                                href={business.licenseFile}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-500 text-nowrap"
+                              >
+                                View License
+                              </a>
+                            </td>
+                            <td className="p-3 text-nowrap">
+                              {business.isApproved ? (
+                                <span className="text-green-500">Approved</span>
+                              ) : (
+                                <span className="text-red-500">
+                                  {!business.isApproved &&
+                                  business.declineReason !== undefined
+                                    ? "Rejected"
+                                    : "Pending"}
+                                </span>
+                              )}
+                            </td>
+                            <td className="p-3 text-nowrap">
+                              {!business.isApproved &&
+                                business.declineReason === undefined && (
+                                  <div className="flex items-center gap-4">
+                                    <button
+                                      disabled={isApproving}
+                                      onClick={() =>
+                                        approveBusiness(business._id)
+                                      }
+                                      className="bg-blue-500 text-white p-2 rounded w-full"
+                                    >
+                                      {isApproving ? "Approving..." : "Approve"}
+                                    </button>
+                                    <button
+                                      onClick={() => setShowTextArea(true)}
+                                      className="bg-red-500 text-white p-2 rounded w-full"
+                                    >
+                                      Decline
+                                    </button>
+                                    {showTextArea && (
+                                      <div className="fixed z-20 inset-0 bg-black/50 flex items-center justify-center">
+                                        <div className="w-fit px-4 rounded-lg bg-white text-black flex flex-col space-y-3 py-10">
+                                          <Button
+                                            className="w-fit self-end"
+                                            onClick={() =>
+                                              setShowTextArea(false)
+                                            }
+                                          >
+                                            <X />
+                                          </Button>
+                                          <p className="font-bold">
+                                            Provide a good reason why you
+                                            decline this company.
+                                          </p>
+                                          <textarea
+                                            rows={3}
+                                            value={declineReason}
+                                            onChange={(e) =>
+                                              setDeclineReason(e.target.value)
+                                            }
+                                            className="border w-full p-2 mt-2 rounded border-blue-500"
+                                          ></textarea>
+                                          <Button
+                                            disabled={submitting}
+                                            onClick={() =>
+                                              declineBusiness(business._id)
+                                            }
+                                          >
+                                            {submitting
+                                              ? "Submitting..."
+                                              : "Submit"}
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              {(business.isApproved ||
+                                business.declineReason !== undefined) && (
+                                <Button
+                                  variant="outline"
+                                  className="p-2 rounded w-full bg-blue-700 text-black"
+                                >
+                                  ☑️
+                                </Button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
           </div>
+        ) : (
+          <p>
+            <Loader2 className="w-7 h-7 animate-spin" />
+          </p>
         )}
       </div>
     </div>

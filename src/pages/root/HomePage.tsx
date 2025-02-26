@@ -1,8 +1,9 @@
-import { endPoint } from "@components/AuthContext";
+import { endPoint, useUserContext } from "@components/AuthContext";
 import CarCard from "@components/CardComponent";
 import { carBrands, testimonials } from "@components/data/dammyData";
 import { useEffect, useState } from "react";
 import { ICar } from "./Dashboard/CarOwnerDashboard";
+import { Link } from "react-router-dom";
 
 export interface ICarCard {
   availableUntil: string;
@@ -24,6 +25,8 @@ export interface ICarCard {
 const HomePage = () => {
   const [featuredCars, setFeaturedCars] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const { user } = useUserContext();
 
   useEffect(() => {
     const fetchFeaturedCars = async () => {
@@ -180,12 +183,36 @@ const HomePage = () => {
               renting yours, we make it easy!
             </p>
             <div className="mt-6 flex flex-col sm:flex-row gap-4">
-              <button className="px-6 py-3 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition">
+              <Link
+                to="#"
+                className="px-6 py-3 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition"
+              >
                 Browse Cars
-              </button>
-              <button className="px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition">
-                List Your Car
-              </button>
+              </Link>
+              {user.email ? (
+                user.role === "carOwner" ? (
+                  <Link
+                    to={`/dashboard/${user._id}`}
+                    className="px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition"
+                  >
+                    List Your Car
+                  </Link>
+                ) : (
+                  <Link
+                    to={`/dashboard/${user._id}`}
+                    className="px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition"
+                  >
+                    Visit your dashboard
+                  </Link>
+                )
+              ) : (
+                <Link
+                  to="/sign-in"
+                  className="px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition"
+                >
+                  List Your Car
+                </Link>
+              )}
             </div>
           </div>
         </section>

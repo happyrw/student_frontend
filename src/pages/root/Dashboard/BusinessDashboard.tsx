@@ -1,4 +1,4 @@
-import { Loader } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const BusinessDashboard = ({
@@ -15,7 +15,7 @@ const BusinessDashboard = ({
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
       <h2 className="text-3xl font-bold mb-4">Company Dashboard</h2>
-      {businessDeclineReason && businessDeclineReason !== "" && (
+      {businessDeclineReason && businessDeclineReason !== undefined && (
         <div className="bg-red-500 p-2 rounded-lg mb-2">
           <p className="text-white text-sm mb-4">
             Your business has been declined. Reason:{" "}
@@ -38,7 +38,7 @@ const BusinessDashboard = ({
       <div>
         {!orderedCars ? (
           <p>
-            <Loader className="w-7 h-7 animate-spin" />
+            <Loader2 className="w-7 h-7 animate-spin" />
           </p>
         ) : (
           <div>
@@ -91,12 +91,16 @@ const BusinessDashboard = ({
                           <td className="p-3 text-nowrap">
                             {order.status === "pending" ? (
                               <span className="text-red-500">Pending</span>
+                            ) : order.status === "cancelled" ? (
+                              <span className="text-red-500">Cancelled</span>
                             ) : (
                               <span className="text-green-500">Approved</span>
                             )}
                           </td>
                           {order.status === "confirmed" ? (
                             <td className="p-3">{order.ownerContact}</td>
+                          ) : order.status === "cancelled" ? (
+                            <td className="p-3 text-red-300">Unavailable</td>
                           ) : (
                             <td className="p-3">Pending...</td>
                           )}

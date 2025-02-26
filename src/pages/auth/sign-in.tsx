@@ -13,7 +13,8 @@ const SignIn = () => {
 
   const navigate = useNavigate();
 
-  const { setUser, setIsAuthenticated, isAuthenticated } = useUserContext();
+  const { setUser, setIsAuthenticated, isAuthenticated, user } =
+    useUserContext();
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -53,10 +54,10 @@ const SignIn = () => {
   };
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && user._id) {
       navigate("/"); // Redirect to the homepage if the user is authenticated
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, user._id, navigate]);
   return (
     <>
       <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white py-5 px-5">
